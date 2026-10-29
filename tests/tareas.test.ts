@@ -6,6 +6,8 @@ import request from "supertest";
 // Es como traer toda nuestra aplicación para ver si funciona correctamente
 import app from "../src/app";
 
+import { describe, it, expect } from '@jest/globals';
+
 // describe nos ayuda a agrupar pruebas relacionadas
 // En este caso, todas las pruebas que verifiquen la ruta GET /tareas
 describe("GET /tareas", () => {
@@ -35,5 +37,35 @@ describe("GET /tareas", () => {
     // 6. La primera tarea debe tener una propiedad 'descripcion'
     // Esta propiedad no existe, y por lo tanto la prueba fallará
     expect(response.body[0]).toHaveProperty("descripcion");
+  });
+});
+
+
+describe("POST /tareas", () => {
+  it("Debe crear una tarea cuando se envía título y descripción", async () => {
+    const nuevaTarea = {
+      titulo: "Aprender mocks",
+      descripcion: "Estudiar mocks y stubs en Jest"
+    };
+
+    const response = await request(app).post("/tareas").send(nuevaTarea);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("id");
+    expect(response.body.titulo).toBe(nuevaTarea.titulo);
+    expect(response.body.descripcion).toBe(nuevaTarea.descripcion);
+    expect(response.body.completada).toBe(false);
+  });
+
+  it("Debe responder con 400 si falta algún campo obligatorio", async () => {
+    const tareaInvalida = {
+      titulo: "Tarea sin descripción"
+    };
+
+    const response = await request(app).post("/tareas").send(tareaInvalida);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("mensaje");
+    expect(response.body.mensaje).toMatch(/obligatorios/i);
   });
 });
